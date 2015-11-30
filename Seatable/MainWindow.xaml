@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Seatable"
         mc:Ignorable="d"
-        Title="MainWindow" Height="533.077" Width="686.539">
-    <Grid>
-        <Button x:Name="abutton" Content="ReadList" Height="40" Margin="0,55,10,0" VerticalAlignment="Top" Click="abutton_Click" HorizontalAlignment="Right" Width="145"/>
-        <DataGrid x:Name="dataGrid" Height="413" Margin="10,55,169,0" VerticalAlignment="Top" IsReadOnly="True" CanUserSortColumns="False" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False"/>
-        <Button x:Name="exportButton" Content="export" HorizontalAlignment="Right" Height="39" Margin="0,119,10,0" VerticalAlignment="Top" Width="145" Click="exportButton_Click"/>
+        Title="MainWindow" Height="533.077" Width="686.539" Closing="Window_Closing" Loaded="Window_Loaded">
+    <Grid >
+        <Button x:Name="abutton" Content="生成" Height="40" Margin="0,55,10,0" VerticalAlignment="Top" Click="abutton_Click" HorizontalAlignment="Right" Width="145"/>
+        <DataGrid x:Name="dataGrid"  Margin="10,55,169,35.2" IsReadOnly="True" CanUserSortColumns="False" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False"/>
+        <Button x:Name="exportButton" Content="导出" HorizontalAlignment="Right" Height="39" Margin="0,119,10,0" VerticalAlignment="Top" Width="145" Click="exportButton_Click"/>
         <ProgressBar x:Name="progressbar1" HorizontalAlignment="Right" Height="39" Margin="0,119,10,0" VerticalAlignment="Top" Width="145" IsIndeterminate="True" Visibility="Hidden" Background="{x:Null}" BorderBrush="{x:Null}"/>
+        <Button x:Name="setExceptionButton" Content="编辑组长排除名单" HorizontalAlignment="Right" Height="39" Margin="0,177,10,0" VerticalAlignment="Top" Width="145" Click="setExceptionButton_Click" />
 
     </Grid>
 </Window>
