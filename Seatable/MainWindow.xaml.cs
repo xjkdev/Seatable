@@ -26,7 +26,7 @@ namespace Seatable
     }
     public partial class MainWindow : System.Windows.Window
     {
-        bool issaved;
+
         Microsoft.Office.Interop.Excel.Application xlApp;
         const string Exceptionfilename = "exception.txt";
         const string Namelistfilename = "list.txt";
@@ -34,10 +34,12 @@ namespace Seatable
         //bool autosaving;
         DataTable a;
         List<Desk> desklist;
+        string[] leaders;
+        
         public MainWindow()
         {
             InitializeComponent();
-            issaved = false;
+            
         }
 
         private async void abutton_Click(object sender, RoutedEventArgs e)
@@ -50,15 +52,18 @@ namespace Seatable
 
         private async void exportButton_Click(object sender, RoutedEventArgs e)
         {
-                progressbar1.Visibility = Visibility.Visible;
-                exportButton.IsEnabled = false;
-                exportButton.Content = "正在导出";
-                await Task.Run(() => CreateExcelDocument(this.a));
-                xlApp.Visible = true;
-                progressbar1.Visibility = Visibility.Hidden;
-                exportButton.IsEnabled = true;
-                exportButton.Content = "导出";
-            
+            progressbar1.Visibility = Visibility.Visible;
+            exportButton.IsEnabled = false;
+            exportButton.Content = "正在导出";
+            await Task.Run(() =>
+            {
+                XLAinit();
+            });
+            await Task.Run(() => CreateExcelDocument(this.a));
+            xlApp.Visible = true;
+            progressbar1.Visibility = Visibility.Hidden;
+            exportButton.IsEnabled = false;
+            exportButton.Content = "导出";
         }
 
         private void setExceptionButton_Click(object sender, RoutedEventArgs e)
@@ -75,30 +80,26 @@ namespace Seatable
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
 
-            if (xlApp != null && !xlApp.Visible)
-            {
-                xlApp.Quit();
-            }
-            else
-            {
-                if (!issaved)
-                {
-                    e.Cancel = true;
-                }
-            }
+            //if (!xlApp?.Visible ?? false)
+            //{
+            //    xlApp.Quit();
+            //}
+            //else if (!isquit)
+            //{
+            //    MessageBox.Show("请先关闭Excel");
+            //    e.Cancel = true;
+            //}
         }
 
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            await Task.Run(() =>
-            {
-                XLAinit();
-            });
+            progressbar1.Visibility = Visibility.Hidden;
+            exportButton.IsEnabled = true;
+            exportButton.Content = "导出";
         }
 
-        private void XlApp_WorkbookAfterSave(Workbook Wb, bool Success)
+        private void XlApp_WorkbookBeforeSave(Workbook Wb, bool SaveAsUI, ref bool Cancel)
         {
-            issaved = true;
             Worksheet ws = Wb.Worksheets[1];
             foreach (DataRow i in this.a.Rows)
             {
@@ -126,8 +127,21 @@ namespace Seatable
                         desklines.Add($"{a}\t{b}");
                 }
             }
+            
             WriteFile(DeskHistoryfilename, desklines.ToArray());
             Writeintowb(Wb);
+        }
+
+        private void XlApp_WorkbookBeforeClose(Workbook Wb, ref bool Cancel)
+        {
+            //isquit = true;
+            //exportButton.IsEnabled = true;
+            exportButton.Dispatcher.Invoke(() => { exportButton.IsEnabled = true; });
+        }
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+
         }
     }
 }

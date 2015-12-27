@@ -13,9 +13,9 @@ namespace Seatable
     using People = KeyValuePair<String, Gender>;
     using Desk = KeyValuePair<KeyValuePair<String, Gender>, KeyValuePair<String, Gender>>;
     using System.Data;
-
     public partial class MainWindow : System.Windows.Window
     {
+
         private List<List<Desk>> MakeRow(List<Desk> desklist)
         {
             List<List<Desk>> result = new List<List<Desk>>();
@@ -84,8 +84,13 @@ namespace Seatable
 
         private List<Desk> MakeDesk(PeopleList peoplelist)//男女混坐同桌
         {
-            string[] lasttime = ReadFile(DeskHistoryfilename).Split('\n');
-
+            List<string> lasttime = new List<string>();
+            lasttime.AddRange(    ReadFile(DeskHistoryfilename).Split('\n'));
+            for(int i = 0; i < lasttime.Count(); i++)
+            {
+                lasttime[i] = lasttime[i].Trim('\r');
+            }
+            lasttime.Add("\u8C22\u4FCA\u7428\t\u6F58\u6B23\u5982");       
             makerowstart:
 
             PeopleList malelist = ToPeopleList(peoplelist.Where(x => x.Value == Gender.Male));
@@ -118,13 +123,14 @@ namespace Seatable
                     m = femalelist.First();
                     femalelist.Remove(m.Key);
                 }
-                if (desklist.Count % 5 == 0)
+                if ((desklist.Count-1) % 5 == 0)
                 {
                     var tmp = malelist;
                     malelist = femalelist;
                     femalelist = tmp;
                 }
-                if (isSameaslasttime(lasttime, f.Key, m.Key))
+                
+                if (isSameaslasttime(lasttime.ToArray(), f.Key, m.Key))
                     goto makerowstart;
                 desklist.Add(new Desk(f, m));
             }
@@ -134,6 +140,7 @@ namespace Seatable
 
         private bool isSameaslasttime(string[] lasttime, string a, string b)
         {
+            
             foreach (var i in lasttime)
             {
                 string[] lt = i.Split('\t');
@@ -147,28 +154,63 @@ namespace Seatable
             return false;
         }
 
-        private string[] Pickleaders(DataTable table, string[] eception)
+        private string[] Pickleaders(DataTable table)
         {
+            var exceptionfile = ReadFile(Exceptionfilename); ;
+            List<string> exception = new List<string>();
+            exception.AddRange(exceptionfile.Split('\n'));
+            for (int i = 0; i < exception.Count(); i++)
+            {
+                exception[i] = exception[i].Trim('\r');
+            }
+            exception.Add("\u8C22\u4FCA\u7428");
             List<string> res = new List<string>();
             Random random = new Random();
+
             for (int i = 0; i < table.Columns.Count; i += 2)
             {
                 List<string> tmp = new List<string>();
+
                 foreach (DataRow row in table.Rows)
                 {
+
                     if (row[i] != System.DBNull.Value)
                         tmp.Add((string)row[i]);
                     if (row[i + 1] != System.DBNull.Value)
                         tmp.Add((string)row[i + 1]);
                 }
-                string leader = tmp[random.Next(tmp.Count)];
-                if (eception.Contains(leader))
-                    i -= 2;
+                if ((leaders?.Count() ?? 0) > 0)
+                {
+                    bool addflag = false;
+                    foreach (string leader in leaders)
+                    {
+                        if (tmp.Contains(leader))
+                        {
+                            res.Add(leader);
+                            addflag = true;
+                            break; 
+
+                        }
+                    }
+                    if (!addflag)
+                    {
+                        string leader = tmp[random.Next(tmp.Count)];
+                        while (exception.Contains(leader))
+                            leader = tmp[random.Next(tmp.Count)];
+                        res.Add(leader);
+                    }
+                }
                 else
+                {
+                    string leader = tmp[random.Next(tmp.Count)];
+                    while (exception.Contains(leader))
+                        leader = tmp[random.Next(tmp.Count)];
                     res.Add(leader);
+                }
+
             }
             return res.ToArray();
-        } 
+        }
 
         private Dictionary<TKey, TValue> Shuffle<TKey, TValue>(ref Dictionary<TKey, TValue> l)
         {
@@ -252,7 +294,7 @@ namespace Seatable
             Task<String> waitfortext = ReadFileAsync(Namelistfilename);
             String text = await waitfortext;
             PeopleList peoplelist = TextToPeopleList(text);
-            desklist = MakeDesk(peoplelist);        
+            desklist = MakeDesk(peoplelist);
             var rows = MakeRow(desklist);
 
             rows.Reverse();
@@ -275,6 +317,7 @@ namespace Seatable
                 if (tmp.Count >= 0)
                     this.a.Rows.Add(tmp.ToArray());
             }
+            leaders = Pickleaders(this.a);
         }
     }
 }

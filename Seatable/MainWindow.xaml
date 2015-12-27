@@ -5,13 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Seatable"
         mc:Ignorable="d"
-        Title="MainWindow" Height="533.077" Width="686.539" Closing="Window_Closing" Loaded="Window_Loaded">
+        Title="Seatable" Height="368.277" Width="468.139" Closing="Window_Closing" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged" MinWidth="468.139" MinHeight="368.277">
     <Grid >
-        <Button x:Name="abutton" Content="生成" Height="40" Margin="0,55,10,0" VerticalAlignment="Top" Click="abutton_Click" HorizontalAlignment="Right" Width="145"/>
-        <DataGrid x:Name="dataGrid"  Margin="10,55,169,35.2" IsReadOnly="True" CanUserSortColumns="False" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False"/>
-        <Button x:Name="exportButton" Content="导出" HorizontalAlignment="Right" Height="39" Margin="0,119,10,0" VerticalAlignment="Top" Width="145" Click="exportButton_Click"/>
-        <ProgressBar x:Name="progressbar1" HorizontalAlignment="Right" Height="39" Margin="0,119,10,0" VerticalAlignment="Top" Width="145" IsIndeterminate="True" Visibility="Hidden" Background="{x:Null}" BorderBrush="{x:Null}"/>
-        <Button x:Name="setExceptionButton" Content="编辑组长排除名单" HorizontalAlignment="Right" Height="39" Margin="0,177,10,0" VerticalAlignment="Top" Width="145" Click="setExceptionButton_Click" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="300*"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="10"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="100*"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="100*"/>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="100*"/>
+            <ColumnDefinition Width="10"/>
+        </Grid.ColumnDefinitions>
+        <DataGrid x:Name="dataGrid"  Margin="0,0,0,0" IsReadOnly="True" CanUserSortColumns="False" CanUserResizeColumns="False" CanUserReorderColumns="False" CanUserResizeRows="False" Grid.Column="1" Grid.ColumnSpan="5" Grid.Row="1" HeadersVisibility="Column" Background="White" BorderBrush="{x:Null}" GridLinesVisibility="None"/>
+        <Button x:Name="abutton" Content="生成" Margin="0,0,0,0" Click="abutton_Click" Grid.Column="1" Grid.ColumnSpan="1" Grid.Row="3"/>
+        <Button x:Name="exportButton" Content="导出" Margin="0,0,0,0" Click="exportButton_Click" Grid.Column="3" Grid.ColumnSpan="1" Grid.Row="3"/>
+        <ProgressBar x:Name="progressbar1" HorizontalAlignment="Right" Margin="0,0,0,0" Width="131" IsIndeterminate="True" Visibility="Hidden" Background="{x:Null}" BorderBrush="{x:Null}" Grid.Column="3" Grid.Row="3" Grid.RowSpan="1"/>
+        <Button x:Name="setExceptionButton" Content="编辑组长排除名单" Margin="0,0,0,0" Click="setExceptionButton_Click" Grid.Column="5" Grid.ColumnSpan="1" Grid.Row="3" />
 
     </Grid>
 </Window>

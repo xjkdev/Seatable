@@ -16,6 +16,7 @@ namespace Seatable
 
     public partial class MainWindow : System.Windows.Window
     {
+        Workbook WB;
         //TextFiles
         private async Task<string> ReadFileAsync(string path)
         {
@@ -102,11 +103,25 @@ namespace Seatable
         //ExcelIO
         private void XLAinit()
         {
-
             xlApp = new Microsoft.Office.Interop.Excel.Application();
-            xlApp.WorkbookAfterSave += XlApp_WorkbookAfterSave;
-
+            //xlApp.WorkbookAfterSave += XlApp_WorkbookAfterSave;
+            xlApp.WorkbookBeforeSave += XlApp_WorkbookBeforeSave;
+            xlApp.WorkbookBeforeClose += XlApp_WorkbookBeforeClose;
+            //isquit = false;            
+            WB = xlApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet);
+            WB.Worksheets.Add();
+            Worksheet ws = (Worksheet)WB.Worksheets[1];
+            if (ws == null)
+            {
+                MessageBox.Show("1:Worksheet could not be created. Check that your office installation and project references are correct.");
+                return;
+            }
+            Firstset(ws);
+            ws = (Worksheet)WB.Worksheets[2];
+            Firstset(ws);
         }
+
+
 
         private bool CreateExcelDocument(DataTable table)
         {
@@ -116,7 +131,7 @@ namespace Seatable
             var exceptionfile = ReadFile(Exceptionfilename);
             List<string> exception = new List<string>();
             exception.AddRange(exceptionfile.Split('\n'));
-            exception.Add("谢俊琨");
+            exception.Add("\u8C22\u4FCA\u7428");
 
 
             if (xlApp == null)
@@ -124,142 +139,111 @@ namespace Seatable
                 MessageBox.Show("EXCEL could not be started. Check that your office installation and project references are correct.");
                 return false;
             }
-            Workbook wb = null;
             xlApp.Visible = false;
-            wb = xlApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet);
-            wb.Worksheets.Add();
-
-
-            string[] leaders = Pickleaders(table, exception.ToArray());
-            Worksheet ws = (Worksheet)wb.Worksheets[1];
-            makesheet(table, ws, $"{DateTime.Now.Month}月{DateTime.Now.Day}日", leaders);
-            DataTable newtable;
-            newtable = ChangeGroup(table);
-            ws = (Worksheet)wb.Worksheets[2];
-
-            makesheet(newtable, ws, $"{DateTime.Now.AddDays(14).Month}月{DateTime.Now.AddDays(14).Day}日", leaders);
+            Worksheet ws = (Worksheet)WB.Worksheets[1];
+            makesheet(table, ws, $"{DateTime.Now.Month}月{DateTime.Now.Day}日");
+            ws = (Worksheet)WB.Worksheets[2];
+            makesheet(ChangeGroup(table), ws, $"{DateTime.Now.AddDays(14).Month}月{DateTime.Now.AddDays(14).Day}日");
             xlApp.Visible = true;
-            wb.Activate();
+            WB.Activate();
             return true;
 
         }
 
         private void Writeintowb(Workbook wb)
-        {
-            var exceptionfile = ReadFile(Exceptionfilename); ;
-            List<string> exception = new List<string>();
-            exception.AddRange(exceptionfile.Split('\n'));
-            exception.Add("谢俊琨");
-
-            string[] leaders = Pickleaders(this.a, exception.ToArray());
+        {         
+            leaders = Pickleaders(this.a);
             Worksheet ws = (Worksheet)wb.Worksheets[1];
-            makesheet(this.a, ws, $"{DateTime.Now.Month}月{DateTime.Now.Day}日", leaders);
+            Firstset(ws, false);
+            makesheet(this.a, ws, $"{DateTime.Now.Month}月{DateTime.Now.Day}日");
             DataTable newtable;
             newtable = ChangeGroup(this.a);
             ws = (Worksheet)wb.Worksheets[2];
-            makesheet(newtable, ws, $"{DateTime.Now.AddDays(14).Month}月{DateTime.Now.AddDays(14).Day}日", leaders);
+            Firstset(ws, false);
+            makesheet(newtable, ws, $"{DateTime.Now.AddDays(14).Month}月{DateTime.Now.AddDays(14).Day}日");
         }
 
-        private bool makesheet(DataTable table, Worksheet ws, string Name, string[] leaders)
+        private void Firstset(Worksheet ws,bool completely = true)
         {
-
-            ws.Name = Name;
-            if (ws == null)
+            Range ab = ws.get_Range("A1", "J9");
+            if (ab != null)
             {
-                MessageBox.Show("Worksheet could not be created. Check that your office installation and project references are correct.");
-                return false;
+                if (completely)
+                {
+                    ab.VerticalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;
+                    ab.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignCenter;
+                    ab.RowHeight = 50;
+                    ab.ColumnWidth = 13.3;
+                    ab.Font.Size = 20;
+                }
+                ab.Font.Bold = 0;
             }
 
+            if (completely)
+            {
+                ab = ws.get_Range("A8", "B8");
+                if (ab != null)
+                {
+                    ab.Merge();
+                    ab.Value = "第一组";
+                }
+
+                ab = ws.get_Range("C8", "D8");
+                if (ab != null)
+                {
+                    ab.Merge();
+                    ab.Value = "第二组";
+                }
+
+                ab = ws.get_Range("E8", "F8");
+                if (ab != null)
+                {
+                    ab.Merge();
+                    ab.Value = "第三组";
+                }
+
+                ab = ws.get_Range("G8", "H8");
+                if (ab != null)
+                {
+                    ab.Merge();
+                    ab.Value = "第四组";
+                }
+
+                ab = ws.get_Range("I8", "J8");
+                if (ab != null)
+                {
+                    ab.Merge();
+                    ab.Value = "第五组";
+                }
+
+                ab = ws.get_Range("A9", "J9");
+                if (ab != null)
+                {
+                    ab.Merge();
+                    ab.Value = "讲台";
+                }
+
+            }
+        }
+
+        private bool makesheet(DataTable table, Worksheet ws, string Name)
+        {
+            Range a;
+            ws.Name = Name;
             foreach (DataRow i in table.Rows)
             {
                 for (int j = 0; j < i.ItemArray.Length; j++)
                 {
                     string range = table.Columns[j].Caption + (int)(table.Rows.IndexOf(i) + 1);
-                    Range a = ws.get_Range(range);
+                    a = ws.get_Range(range);
                     if (a != null)
                     {
                         a.Value = i[j].ToString();
-                        a.VerticalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;
-                        a.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignCenter;
-                        a.RowHeight = 50;
-                        a.ColumnWidth = 13.3;
-                        a.Font.Size = 20;
                         if (leaders.Contains(i[j].ToString()))
-                        {
                             a.Font.Bold = 1;
-                        }
-                        else
-                            a.Font.Bold = 0;
                     }
                 }
             }
-
-            Range ab = ws.get_Range("A8", "B8");
-            if (ab != null)
-            {
-                ab.Merge();
-                ab.Value = "第一组";
-                ab.VerticalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;
-                ab.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignCenter;
-                ab.RowHeight = 50;
-                ab.Font.Size = 20;
-            }
-
-            ab = ws.get_Range("C8", "D8");
-            if (ab != null)
-            {
-                ab.Merge();
-                ab.Value = "第二组";
-                ab.VerticalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;
-                ab.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignCenter;
-                ab.RowHeight = 50;
-                ab.Font.Size = 20;
-            }
-
-            ab = ws.get_Range("E8", "F8");
-            if (ab != null)
-            {
-                ab.Merge();
-                ab.Value = "第三组";
-                ab.VerticalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;
-                ab.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignCenter;
-                ab.RowHeight = 50;
-                ab.Font.Size = 20;
-            }
-
-            ab = ws.get_Range("G8", "H8");
-            if (ab != null)
-            {
-                ab.Merge();
-                ab.Value = "第四组";
-                ab.VerticalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;
-                ab.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignCenter;
-                ab.RowHeight = 50;
-                ab.Font.Size = 20;
-            }
-
-            ab = ws.get_Range("I8", "J8");
-            if (ab != null)
-            {
-                ab.Merge();
-                ab.Value = "第五组";
-                ab.VerticalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;
-                ab.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignCenter;
-                ab.RowHeight = 50;
-                ab.Font.Size = 20;
-            }
-
-            ab = ws.get_Range("A9", "J9");
-            if (ab != null)
-            {
-                ab.Merge();
-                ab.Value = "讲台";
-                ab.VerticalAlignment = Microsoft.Office.Interop.Excel.XlVAlign.xlVAlignCenter;
-                ab.HorizontalAlignment = Microsoft.Office.Interop.Excel.XlHAlign.xlHAlignCenter;
-                ab.RowHeight = 50;
-                ab.Font.Size = 20;
-            }
-
             return true;
         }
     }
