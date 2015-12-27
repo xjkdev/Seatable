@@ -16,6 +16,8 @@ namespace Seatable
     using System.Data;
     using Octokit;
     using Excel = Microsoft.Office.Interop.Excel;
+    using System.Net;
+    using System.Text.RegularExpressions;
 
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -74,16 +76,50 @@ namespace Seatable
             //p.StartInfo.Arguments = Exceptionfilename;
             //p.StartInfo.CreateNoWindow = fal se;
             //p.Start();
+
             Octokit.GitHubClient github = new GitHubClient(new ProductHeaderValue("seatable"));
             var realeases = await github.Release.GetAll("xjkdev", "seatable");
+            Release latest=null;
             foreach(var i in realeases)
-            {
-                textBox.Text += i.TagName;
-                textBox.Text += i.AssetsUrl+ '\n';               
-                
+            { 
+                if (latest == null)
+                {
+                    latest = i;
+                    continue;
+                }
+                else
+                {
+                    if (latest.CreatedAt < i.CreatedAt)
+                    {
+                        latest = i;
+                    }
+                }                         
             }
-
+            var appCompileTime = System.IO.File.GetLastWriteTime(this.GetType().Assembly.Location);
+            if(appCompileTime < latest.CreatedAt)
+            {
+                MessageBox.Show("need to update");
+            }
+            else
+            {
+                MessageBox.Show("don't need to update");
+            }
+            WebClient client = new WebClient();
+            client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11");
+            client.Encoding = Encoding.UTF8;
+            string html = null;
+            await Task.Run(()=> html= client.DownloadString(latest.AssetsUrl));
+            textBox.Text = html;
+            MatchCollection matches = Regex.Matches(html, "\"browser_download_url\": \"(.*)\"");
+            if(matches.Count == 1)
+            {
+                textBox.Text += matches[0].Groups[1].Value;
+                Uri downloadurl = new Uri(matches[0].Groups[1].Value);
+                client.DownloadFileAsync(downloadurl, "upadte.exe");
+            }
+            
         }
+
 
 
 
