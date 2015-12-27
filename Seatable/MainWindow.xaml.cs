@@ -99,24 +99,25 @@ namespace Seatable
             if(appCompileTime < latest.CreatedAt)
             {
                 MessageBox.Show("need to update");
+                WebClient client = new WebClient();
+                client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11");
+                client.Encoding = Encoding.UTF8;
+                string html = null;
+                await Task.Run(() => html = client.DownloadString(latest.AssetsUrl));
+                textBox.Text = html;
+                MatchCollection matches = Regex.Matches(html, "\"browser_download_url\": \"(.*)\"");
+                if (matches.Count == 1)
+                {
+                    textBox.Text += matches[0].Groups[1].Value;
+                    Uri downloadurl = new Uri(matches[0].Groups[1].Value);
+                    client.DownloadFileAsync(downloadurl, "upadte.exe");
+                }
             }
             else
             {
                 MessageBox.Show("don't need to update");
             }
-            WebClient client = new WebClient();
-            client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11");
-            client.Encoding = Encoding.UTF8;
-            string html = null;
-            await Task.Run(()=> html= client.DownloadString(latest.AssetsUrl));
-            textBox.Text = html;
-            MatchCollection matches = Regex.Matches(html, "\"browser_download_url\": \"(.*)\"");
-            if(matches.Count == 1)
-            {
-                textBox.Text += matches[0].Groups[1].Value;
-                Uri downloadurl = new Uri(matches[0].Groups[1].Value);
-                client.DownloadFileAsync(downloadurl, "upadte.exe");
-            }
+
             
         }
 
