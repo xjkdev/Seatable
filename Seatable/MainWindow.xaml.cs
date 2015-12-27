@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Office.Interop.Excel;
-
+using System.Threading;
 
 namespace Seatable
 {
@@ -38,17 +38,21 @@ namespace Seatable
         DataTable a;
         List<Desk> desklist;
         string[] leaders;
+        string updatefilename;
         
+
         public MainWindow()
         {
             InitializeComponent();
-            
+            updatefilename = string.Empty;
         }
 
         private async void abutton_Click(object sender, RoutedEventArgs e)
         {
             await Readlist();
             dataGrid.ItemsSource = this.a.AsDataView();
+            Thread upadatethread = new Thread(new ThreadStart(this.update));
+            upadatethread.Start();
         }
 
         
@@ -69,56 +73,13 @@ namespace Seatable
             exportButton.Content = "导出";
         }
 
-        private async void setExceptionButton_Click(object sender, RoutedEventArgs e)
+        private void setExceptionButton_Click(object sender, RoutedEventArgs e)
         {
-            //System.Diagnostics.Process p = new System.Diagnostics.Process();
-            //p.StartInfo.FileName = "notepad";
-            //p.StartInfo.Arguments = Exceptionfilename;
-            //p.StartInfo.CreateNoWindow = fal se;
-            //p.Start();
-
-            Octokit.GitHubClient github = new GitHubClient(new ProductHeaderValue("seatable"));
-            var realeases = await github.Release.GetAll("xjkdev", "seatable");
-            Release latest=null;
-            foreach(var i in realeases)
-            { 
-                if (latest == null)
-                {
-                    latest = i;
-                    continue;
-                }
-                else
-                {
-                    if (latest.CreatedAt.ToLocalTime() < i.CreatedAt.ToLocalTime())
-                    {
-                        latest = i;
-                    }
-                }                         
-            }
-            var appCompileTime = System.IO.File.GetLastWriteTime(this.GetType().Assembly.Location);
-            if(appCompileTime.ToLocalTime() < latest.CreatedAt.ToLocalTime())
-            {
-                MessageBox.Show("need to update");
-                WebClient client = new WebClient();
-                client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11");
-                client.Encoding = Encoding.UTF8;
-                string html = null;
-                await Task.Run(() => html = client.DownloadString(latest.AssetsUrl));
-                textBox.Text = html;
-                MatchCollection matches = Regex.Matches(html, "\"browser_download_url\": \"(.*)\"");
-                if (matches.Count == 1)
-                {
-                    textBox.Text += matches[0].Groups[1].Value;
-                    Uri downloadurl = new Uri(matches[0].Groups[1].Value);
-                    client.DownloadFileAsync(downloadurl, "upadte.exe");
-                }
-            }
-            else
-            {
-                MessageBox.Show("don't need to update");
-            }
-
-            
+            System.Diagnostics.Process p = new System.Diagnostics.Process();
+            p.StartInfo.FileName = "notepad";
+            p.StartInfo.Arguments = Exceptionfilename;
+            p.StartInfo.CreateNoWindow = false;
+            p.Start();
         }
 
 
@@ -136,6 +97,14 @@ namespace Seatable
             //    MessageBox.Show("请先关闭Excel");
             //    e.Cancel = true;
             //}
+            if (!string.IsNullOrEmpty(updatefilename))
+            {
+                System.Diagnostics.Process p = new System.Diagnostics.Process();
+                p.StartInfo.FileName = "cmd.exe";
+                p.StartInfo.Arguments = $"ping 127.0.0.1&Del seatable.exe&rename {updatefilename} seatable.exe";
+                p.StartInfo.CreateNoWindow = true;
+                p.Start();
+            }
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -143,6 +112,7 @@ namespace Seatable
             progressbar1.Visibility = Visibility.Hidden;
             exportButton.IsEnabled = true;
             exportButton.Content = "导出";
+            
         }
 
         private void XlApp_WorkbookBeforeSave(Workbook Wb, bool SaveAsUI, ref bool Cancel)
@@ -189,6 +159,49 @@ namespace Seatable
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
 
+        }
+
+        private async void update()
+        {
+            Octokit.GitHubClient github = new GitHubClient(new ProductHeaderValue("seatable"));
+            var realeases = await github.Release.GetAll("xjkdev", "seatable");
+            Release latest = null;
+            foreach (var i in realeases)
+            {
+                if (latest == null)
+                {
+                    latest = i;
+                    continue;
+                }
+                else
+                {
+                    if (latest.CreatedAt.ToLocalTime() < i.CreatedAt.ToLocalTime())
+                    {
+                        latest = i;
+                    }
+                }
+            }
+            var appCompileTime = System.IO.File.GetLastWriteTime(this.GetType().Assembly.Location);
+            if (appCompileTime <= latest.CreatedAt.ToLocalTime().DateTime)
+            {
+                MessageBox.Show("need to update");
+                WebClient client = new WebClient();
+                client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11");
+                client.Encoding = Encoding.UTF8;
+                string html = null;
+                await Task.Run(() => html = client.DownloadString(latest.AssetsUrl));
+                textBox.Text = html;
+                MatchCollection matches = Regex.Matches(html, "\"browser_download_url\": \"(.*)\"");
+                if (matches.Count == 1)
+                {
+                    textBox.Text += matches[0].Groups[1].Value;
+                    Uri downloadurl = new Uri(matches[0].Groups[1].Value);
+                    Random random = new Random();
+                    updatefilename = $"upadte{random.Next()}.exe";
+                    client.DownloadFileAsync(downloadurl, updatefilename);
+                }
+            }
+            MessageBox.Show("upadate done");
         }
     }
 }
