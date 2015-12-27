@@ -89,14 +89,14 @@ namespace Seatable
                 }
                 else
                 {
-                    if (latest.CreatedAt < i.CreatedAt)
+                    if (latest.CreatedAt.ToLocalTime() < i.CreatedAt.ToLocalTime())
                     {
                         latest = i;
                     }
                 }                         
             }
             var appCompileTime = System.IO.File.GetLastWriteTime(this.GetType().Assembly.Location);
-            if(appCompileTime < latest.CreatedAt)
+            if(appCompileTime.ToLocalTime() < latest.CreatedAt.ToLocalTime())
             {
                 MessageBox.Show("need to update");
                 WebClient client = new WebClient();
