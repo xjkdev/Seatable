@@ -39,20 +39,20 @@ namespace Seatable
         List<Desk> desklist;
         string[] leaders;
         string updatefilename;
-        
+        Thread updatethread;
 
         public MainWindow()
         {
             InitializeComponent();
             updatefilename = string.Empty;
+            updatethread = new Thread(new ThreadStart(this.update));
+            updatethread.Start();
         }
 
         private async void abutton_Click(object sender, RoutedEventArgs e)
         {
             await Readlist();
             dataGrid.ItemsSource = this.a.AsDataView();
-            Thread upadatethread = new Thread(new ThreadStart(this.update));
-            upadatethread.Start();
         }
 
         
@@ -97,12 +97,18 @@ namespace Seatable
             //    MessageBox.Show("请先关闭Excel");
             //    e.Cancel = true;
             //}
+            if (updatethread!=null &&  updatethread.IsAlive)
+            {
+                Hide();
+                updatethread.Join();
+            }
             if (!string.IsNullOrEmpty(updatefilename))
             {
                 System.Diagnostics.Process p = new System.Diagnostics.Process();
                 p.StartInfo.FileName = "cmd.exe";
-                p.StartInfo.Arguments = $"ping 127.0.0.1&Del seatable.exe&rename {updatefilename} seatable.exe";
+                p.StartInfo.Arguments = $"/C ping 127.0.0.1> Nul&Del seatable.exe&rename {updatefilename} seatable.exe";
                 p.StartInfo.CreateNoWindow = true;
+                p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
                 p.Start();
             }
         }
@@ -181,25 +187,20 @@ namespace Seatable
                     }
                 }
             }
-            var appCompileTime = System.IO.File.GetLastWriteTime(this.GetType().Assembly.Location);
-            if (appCompileTime <= latest.CreatedAt.ToLocalTime().DateTime)
+            WebClient client = new WebClient();
+            client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11");
+            client.Encoding = Encoding.UTF8;
+            string html = null;
+            html = client.DownloadString(latest.AssetsUrl);
+            MatchCollection matches = Regex.Matches(html, "\"browser_download_url\": \"(.*)\"");
+            if (matches.Count == 1)
             {
-                MessageBox.Show("need to update");
-                WebClient client = new WebClient();
-                client.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 6.0) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11");
-                client.Encoding = Encoding.UTF8;
-                string html = null;
-                await Task.Run(() => html = client.DownloadString(latest.AssetsUrl));
-                MatchCollection matches = Regex.Matches(html, "\"browser_download_url\": \"(.*)\"");
-                if (matches.Count == 1)
-                {
-                    Uri downloadurl = new Uri(matches[0].Groups[1].Value);
-                    Random random = new Random();
-                    updatefilename = $"upadte{random.Next()}.exe";
-                    client.DownloadFileAsync(downloadurl, updatefilename);
-                }
+                Uri downloadurl = new Uri(matches[0].Groups[1].Value);
+                Random random = new Random();
+                updatefilename = $"upadte{random.Next()}.exe";
+                client.DownloadFileAsync(downloadurl, updatefilename);
             }
-            MessageBox.Show("upadate done");
+            //MessageBox.Show("upadate done");
         }
     }
 }
