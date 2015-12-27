@@ -13,7 +13,7 @@ namespace Seatable
     using People = KeyValuePair<String, Gender>;
     using Desk = KeyValuePair<KeyValuePair<String, Gender>, KeyValuePair<String, Gender>>;
     using System.Data;
-
+    using Excel = Microsoft.Office.Interop.Excel;
     public partial class MainWindow : System.Windows.Window
     {
         Workbook WB;
@@ -165,7 +165,7 @@ namespace Seatable
 
         private void Firstset(Worksheet ws,bool completely = true)
         {
-            Range ab = ws.get_Range("A1", "J9");
+            Excel.Range ab = ws.get_Range("A1", "J9");
             if (ab != null)
             {
                 if (completely)
@@ -228,7 +228,7 @@ namespace Seatable
 
         private bool makesheet(DataTable table, Worksheet ws, string Name)
         {
-            Range a;
+            Excel.Range a;
             ws.Name = Name;
             foreach (DataRow i in table.Rows)
             {

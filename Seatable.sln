@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Seatable", "Seatable\Seatable.csproj", "{42C22A9F-96BD-4B64-A891-6A9B64391DE6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Experiment2", "Experiment2\Experiment2.csproj", "{CC9396A5-3AC6-4C24-A86B-BDBC8F7691C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{42C22A9F-96BD-4B64-A891-6A9B64391DE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42C22A9F-96BD-4B64-A891-6A9B64391DE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42C22A9F-96BD-4B64-A891-6A9B64391DE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC9396A5-3AC6-4C24-A86B-BDBC8F7691C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC9396A5-3AC6-4C24-A86B-BDBC8F7691C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC9396A5-3AC6-4C24-A86B-BDBC8F7691C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC9396A5-3AC6-4C24-A86B-BDBC8F7691C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

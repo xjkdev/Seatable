@@ -14,7 +14,8 @@ namespace Seatable
     using People = KeyValuePair<String, Gender>;
     using Desk = KeyValuePair<KeyValuePair<String, Gender>, KeyValuePair<String, Gender>>;
     using System.Data;
-    
+    using Octokit;
+    using Excel = Microsoft.Office.Interop.Excel;
 
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
@@ -66,16 +67,25 @@ namespace Seatable
             exportButton.Content = "导出";
         }
 
-        private void setExceptionButton_Click(object sender, RoutedEventArgs e)
+        private async void setExceptionButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process p = new System.Diagnostics.Process();
-            p.StartInfo.FileName = "notepad";
-            p.StartInfo.Arguments = Exceptionfilename;
-            p.StartInfo.CreateNoWindow = false;
-            p.Start();
+            //System.Diagnostics.Process p = new System.Diagnostics.Process();
+            //p.StartInfo.FileName = "notepad";
+            //p.StartInfo.Arguments = Exceptionfilename;
+            //p.StartInfo.CreateNoWindow = fal se;
+            //p.Start();
+            Octokit.GitHubClient github = new GitHubClient(new ProductHeaderValue("seatable"));
+            var realeases = await github.Release.GetAll("xjkdev", "seatable");
+            foreach(var i in realeases)
+            {
+                textBox.Text += i.TagName;
+                textBox.Text += i.AssetsUrl+ '\n';               
+                
+            }
+
         }
 
-       
+
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -106,7 +116,7 @@ namespace Seatable
                 for (int j = 0; j < i.ItemArray.Length; j++)
                 {
                     string range = this.a.Columns[j].Caption + (int)(this.a.Rows.IndexOf(i) + 1);
-                    Range a = ws.get_Range(range);
+                    Excel.Range a = ws.get_Range(range);
                     if (a != null)
                     {
                         i[j] = a.Value;
