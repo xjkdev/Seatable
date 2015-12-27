@@ -190,11 +190,9 @@ namespace Seatable
                 client.Encoding = Encoding.UTF8;
                 string html = null;
                 await Task.Run(() => html = client.DownloadString(latest.AssetsUrl));
-                textBox.Text = html;
                 MatchCollection matches = Regex.Matches(html, "\"browser_download_url\": \"(.*)\"");
                 if (matches.Count == 1)
                 {
-                    textBox.Text += matches[0].Groups[1].Value;
                     Uri downloadurl = new Uri(matches[0].Groups[1].Value);
                     Random random = new Random();
                     updatefilename = $"upadte{random.Next()}.exe";
